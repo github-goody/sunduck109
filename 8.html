@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>선덕고등학교 1학년 9반 학급 건의함</title>
+<style>
+  /* 모달 배경 */
+  #modalOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  /* 모달 박스 */
+  #modalBox {
+    background-color: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  }
+  button {
+    margin-top: 20px;
+    padding: 8px 20px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  /* 페이지 기본 스타일 */
+  body {
+    font-family: "Nanum Gothic", "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #fff;
+    color: #000;
+    padding: 40px 20px 60px;
+    max-width: 600px;
+    margin: auto;
+  }
+  /* 중앙 제목 */
+  #mainTitle {
+    font-weight: 900;
+    font-size: 36px;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  /* 'Connecting Hearts' 바로 밑에 배치 */
+  #subTitle {
+    font-family: "Georgia", "Times New Roman", serif;
+    font-style: italic;
+    font-size: 16px;
+    color: #555;
+    text-align: center;
+    margin-bottom: 30px;
+    user-select: none;
+  }
+  form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 12px;
+  }
+  input[type="text"], input[type="password"] {
+    padding: 5px;
+    border: 1px solid #ddd;
+    font-size: 12px;
+    font-family: inherit;
+  }
+  input[name="name"], input[name="password"] {
+    width: 80px;
+  }
+  input[name="message"] {
+    flex: 1;
+  }
+  button[type="submit"] {
+    padding: 5px 15px;
+    font-size: 12px;
+    background-color: #efefef;
+    border: 1px solid #ccc;
+  }
+  button[type="submit"]:hover {
+    background-color: #e0e0e0;
+  }
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  li {
+    font-size: 12px;
+    border-bottom: 1px solid #ddd;
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .entry-left {
+    flex-grow: 1;
+  }
+  .entry-time {
+    color: #888;
+    font-size: 11px;
+    white-space: nowrap;
+    margin-left: 10px;
+  }
+  .delete-btn {
+    margin-left: 10px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<!-- 개인정보보호법 경고 모달 -->
+<div id="modalOverlay">
+  <div id="modalBox">
+    <h2>개인정보보호법 위반 주의</h2>
+    <p>개인정보를 무단으로 게시할 경우 법적 처벌을 받을 수 있습니다.<br>작성 시 주의해 주세요.</p>
+    <button id="closeBtn">확인</button>
+  </div>
+</div>
+
+<!-- 제목 -->
+<div id="mainTitle">선덕고등학교 1학년 9반 학급 건의함</div>
+<div id="subTitle">SunDuck 1-9</div>
+
+<!-- 방명록 작성 폼 -->
+<form id="guestbook-form">
+  <input type="text" name="name" placeholder="이름" required />
+  <input type="text" name="message" placeholder="내용을 입력하세요" required />
+  <input type="password" name="password" placeholder="비밀번호" required />
+  <button type="submit">작성</button>
+</form>
+
+<!-- 방명록 리스트 -->
+<ul id="guestbook-entries"></ul>
+
+<script>
+  // 모달 관련
+  const modal = document.getElementById('modalOverlay');
+  const closeBtn = document.getElementById('closeBtn');
+  closeBtn.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  const form = document.getElementById("guestbook-form");
+  const entriesList = document.getElementById("guestbook-entries");
+
+  // 글 저장용 배열 (비밀번호 포함)
+  let entries = [];
+
+  function createEntryElement(entry, index) {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="entry-left">
+        <span class="entry-name">${entry.name}</span>
+        ${entry.message}
+        <div class="entry-time">${entry.time}</div>
+      </div>
+      <button class="delete-btn">삭제</button>
+    `;
+
+    // 삭제 버튼 클릭 이벤트
+    li.querySelector(".delete-btn").addEventListener("click", () => {
+      const inputPwd = prompt("비밀번호를 입력하세요:");
+      if (inputPwd === null) return; // 취소
+      if (inputPwd === entry.password) {
+        entries.splice(index, 1);
+        renderEntries();
+      } else {
+        alert("비밀번호가 틀렸습니다.");
+      }
+    });
+
+    return li;
+  }
+
+  function renderEntries() {
+    entriesList.innerHTML = "";
+    entries.forEach((entry, idx) => {
+      entriesList.appendChild(createEntryElement(entry, idx));
+    });
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const name = form.name.value.trim();
+    const message = form.message.value.trim();
+    const password = form.password.value;
+    const time = new Date().toLocaleString();
+
+    if (!name || !message || !password) {
+      alert("모든 입력란을 작성해주세요.");
+      return;
+    }
+
+    entries.push({ name, message, password, time });
+    renderEntries();
+
+    form.name.value = "";
+    form.message.value = "";
+    form.password.value = "";
+  });
+
+  // 초기 렌더 (빈 상태)
+  renderEntries();
+</script>
+
+</body>
+</html>
