@@ -23,91 +23,27 @@
     text-align: center;
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
   }
-  button {
-    margin-top: 20px;
-    padding: 8px 20px;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  /* 페이지 기본 스타일 */
+  button { margin-top: 20px; padding: 8px 20px; font-size: 14px; cursor: pointer; }
   body {
     font-family: "Nanum Gothic", "Malgun Gothic", "Apple SD Gothic Neo", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #fff;
-    color: #000;
-    padding: 40px 20px 60px;
-    max-width: 600px;
-    margin: auto;
+    background-color: #fff; color: #000; padding: 40px 20px 60px;
+    max-width: 600px; margin: auto;
   }
-  /* 중앙 제목 */
-  #mainTitle {
-    font-weight: 900;
-    font-size: 36px;
-    text-align: center;
-    margin-bottom: 4px;
+  #mainTitle { font-weight: 900; font-size: 36px; text-align: center; margin-bottom: 4px; }
+  #subTitle { font-family: "Georgia", "Times New Roman", serif; font-style: italic; font-size: 16px;
+    color: #555; text-align: center; margin-bottom: 30px; user-select: none;
   }
-  /* 'Connecting Hearts' 바로 밑에 배치 */
-  #subTitle {
-    font-family: "Georgia", "Times New Roman", serif;
-    font-style: italic;
-    font-size: 16px;
-    color: #555;
-    text-align: center;
-    margin-bottom: 30px;
-    user-select: none;
-  }
-  form {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    font-size: 12px;
-  }
-  input[type="text"], input[type="password"] {
-    padding: 5px;
-    border: 1px solid #ddd;
-    font-size: 12px;
-    font-family: inherit;
-  }
-  input[name="name"], input[name="password"] {
-    width: 80px;
-  }
-  input[name="message"] {
-    flex: 1;
-  }
-  button[type="submit"] {
-    padding: 5px 15px;
-    font-size: 12px;
-    background-color: #efefef;
-    border: 1px solid #ccc;
-  }
-  button[type="submit"]:hover {
-    background-color: #e0e0e0;
-  }
-  ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  li {
-    font-size: 12px;
-    border-bottom: 1px solid #ddd;
-    padding: 8px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .entry-left {
-    flex-grow: 1;
-  }
-  .entry-time {
-    color: #888;
-    font-size: 11px;
-    white-space: nowrap;
-    margin-left: 10px;
-  }
-  .delete-btn {
-    margin-left: 10px;
-    font-size: 11px;
-    cursor: pointer;
-  }
+  form { display: flex; gap: 10px; margin-bottom: 20px; font-size: 12px; }
+  input[type="text"], input[type="password"] { padding: 5px; border: 1px solid #ddd; font-size: 12px; font-family: inherit; }
+  input[name="name"], input[name="password"] { width: 80px; }
+  input[name="message"] { flex: 1; }
+  button[type="submit"] { padding: 5px 15px; font-size: 12px; background-color: #efefef; border: 1px solid #ccc; }
+  button[type="submit"]:hover { background-color: #e0e0e0; }
+  ul { list-style-type: none; padding: 0; }
+  li { font-size: 12px; border-bottom: 1px solid #ddd; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
+  .entry-left { flex-grow: 1; }
+  .entry-time { color: #888; font-size: 11px; white-space: nowrap; margin-left: 10px; }
+  .delete-btn { margin-left: 10px; font-size: 11px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -136,21 +72,33 @@
 <!-- 방명록 리스트 -->
 <ul id="guestbook-entries"></ul>
 
-<script>
-  // 모달 관련
+<script type="module">
+  // 🔹 Firebase SDK 연결
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAUzxNTpRe0V1ELKQfNgIwdlC2rnHxk9ts",
+    authDomain: "sunduck109.firebaseapp.com",
+    databaseURL: "https://sunduck109-default-rtdb.firebaseio.com",
+    projectId: "sunduck109",
+    storageBucket: "sunduck109.firebasestorage.app",
+    messagingSenderId: "442985649228",
+    appId: "1:442985649228:web:5c91090247fb2fa6c090e9",
+    measurementId: "G-G60DXGGLDT"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
   const modal = document.getElementById('modalOverlay');
   const closeBtn = document.getElementById('closeBtn');
-  closeBtn.addEventListener('click', () => {
-    modal.style.display = 'none';
-  });
-
   const form = document.getElementById("guestbook-form");
   const entriesList = document.getElementById("guestbook-entries");
 
-  // 글 저장용 배열 (비밀번호 포함)
-  let entries = [];
+  closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
 
-  function createEntryElement(entry, index) {
+  function createEntryElement(key, entry) {
     const li = document.createElement("li");
     li.innerHTML = `
       <div class="entry-left">
@@ -161,13 +109,11 @@
       <button class="delete-btn">삭제</button>
     `;
 
-    // 삭제 버튼 클릭 이벤트
     li.querySelector(".delete-btn").addEventListener("click", () => {
       const inputPwd = prompt("비밀번호를 입력하세요:");
-      if (inputPwd === null) return; // 취소
-      if (inputPwd === entry.password) {
-        entries.splice(index, 1);
-        renderEntries();
+      if(inputPwd === null) return;
+      if(inputPwd === entry.password) {
+        remove(ref(db, 'guestbook/' + key));
       } else {
         alert("비밀번호가 틀렸습니다.");
       }
@@ -176,36 +122,33 @@
     return li;
   }
 
-  function renderEntries() {
+  function renderEntries(data) {
     entriesList.innerHTML = "";
-    entries.forEach((entry, idx) => {
-      entriesList.appendChild(createEntryElement(entry, idx));
-    });
+    for(const [key, value] of Object.entries(data || {})) {
+      entriesList.appendChild(createEntryElement(key, value));
+    }
   }
+
+  // 실시간으로 DB 변화를 반영
+  const guestbookRef = ref(db, 'guestbook');
+  onValue(guestbookRef, (snapshot) => {
+    renderEntries(snapshot.val());
+  });
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
-
     const name = form.name.value.trim();
     const message = form.message.value.trim();
     const password = form.password.value;
     const time = new Date().toLocaleString();
+    if(!name || !message || !password) { alert("모든 입력란을 작성해주세요."); return; }
 
-    if (!name || !message || !password) {
-      alert("모든 입력란을 작성해주세요.");
-      return;
-    }
-
-    entries.push({ name, message, password, time });
-    renderEntries();
+    push(guestbookRef, { name, message, password, time });
 
     form.name.value = "";
     form.message.value = "";
     form.password.value = "";
   });
-
-  // 초기 렌더 (빈 상태)
-  renderEntries();
 </script>
 
 </body>
