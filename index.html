@@ -35,7 +35,7 @@
   }
   form { display: flex; gap: 10px; margin-bottom: 20px; font-size: 12px; }
   input[type="text"], input[type="password"] { padding: 5px; border: 1px solid #ddd; font-size: 12px; font-family: inherit; }
-  input[name="name"], input[name="password"] { width: 80px; }
+  input[name="name"], input[name="password"], input[name="inviteCode"] { width: 80px; }
   input[name="message"] { flex: 1; }
   button[type="submit"] { padding: 5px 15px; font-size: 12px; background-color: #efefef; border: 1px solid #ccc; }
   button[type="submit"]:hover { background-color: #e0e0e0; }
@@ -61,19 +61,26 @@
 <div id="mainTitle">선덕고등학교 1학년 9반 학급 건의함</div>
 <div id="subTitle">SunDuck 1-9</div>
 
-<!-- 방명록 작성 폼 -->
-<form id="guestbook-form">
-  <input type="text" name="name" placeholder="이름" required />
-  <input type="text" name="message" placeholder="내용을 입력하세요" required />
-  <input type="password" name="password" placeholder="비밀번호" required />
-  <button type="submit">작성</button>
-</form>
+<!-- 초대 코드 입력 섹션 -->
+<div id="inviteSection">
+  <form id="invite-form">
+    <input type="text" id="inviteCode" placeholder="초대 코드 입력" required />
+    <button type="submit">입장</button>
+  </form>
+</div>
 
-<!-- 방명록 리스트 -->
-<ul id="guestbook-entries"></ul>
+<!-- 방명록 작성 섹션 (초대 코드 인증 후 표시) -->
+<div id="mainSection" style="display:none;">
+  <form id="guestbook-form">
+    <input type="text" name="name" placeholder="이름" required />
+    <input type="text" name="message" placeholder="내용을 입력하세요" required />
+    <input type="password" name="password" placeholder="비밀번호" required />
+    <button type="submit">작성</button>
+  </form>
+  <ul id="guestbook-entries"></ul>
+</div>
 
 <script type="module">
-  // 🔹 Firebase SDK 연결
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
   import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 
@@ -93,10 +100,35 @@
 
   const modal = document.getElementById('modalOverlay');
   const closeBtn = document.getElementById('closeBtn');
-  const form = document.getElementById("guestbook-form");
+  const inviteForm = document.getElementById("invite-form");
+  const guestForm = document.getElementById("guestbook-form");
   const entriesList = document.getElementById("guestbook-entries");
 
+  const inviteSection = document.getElementById("inviteSection");
+  const mainSection = document.getElementById("mainSection");
+
+  const inviteCodes = ["ABC123","XYZ789","HELLO2025"]; // 원하는 코드 설정
+
   closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
+
+  // 초대 코드 확인
+  inviteForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const code = document.getElementById("inviteCode").value.trim();
+      if(inviteCodes.includes(code)) {
+          localStorage.setItem("verified","true");
+          inviteSection.style.display = "none";
+          mainSection.style.display = "block";
+      } else {
+          alert("초대 코드가 올바르지 않습니다.");
+      }
+  });
+
+  // 이미 인증한 사용자면 바로 보여주기
+  if(localStorage.getItem("verified") === "true"){
+      inviteSection.style.display = "none";
+      mainSection.style.display = "block";
+  }
 
   function createEntryElement(key, entry) {
     const li = document.createElement("li");
@@ -108,7 +140,6 @@
       </div>
       <button class="delete-btn">삭제</button>
     `;
-
     li.querySelector(".delete-btn").addEventListener("click", () => {
       const inputPwd = prompt("비밀번호를 입력하세요:");
       if(inputPwd === null) return;
@@ -118,7 +149,6 @@
         alert("비밀번호가 틀렸습니다.");
       }
     });
-
     return li;
   }
 
@@ -129,27 +159,28 @@
     }
   }
 
-  // 실시간으로 DB 변화를 반영
+  // 실시간 DB 반영
   const guestbookRef = ref(db, 'guestbook');
   onValue(guestbookRef, (snapshot) => {
     renderEntries(snapshot.val());
   });
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const name = form.name.value.trim();
-    const message = form.message.value.trim();
-    const password = form.password.value;
-    const time = new Date().toLocaleString();
-    if(!name || !message || !password) { alert("모든 입력란을 작성해주세요."); return; }
-
-    push(guestbookRef, { name, message, password, time });
-
-    form.name.value = "";
-    form.message.value = "";
-    form.password.value = "";
+  // 글 작성
+  guestForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = guestForm.name.value.trim();
+      const message = guestForm.message.value.trim();
+      const password = guestForm.password.value;
+      const time = new Date().toLocaleString();
+      if(!name || !message || !password) { alert("모든 입력란을 작성해주세요."); return; }
+      push(guestbookRef, { name, message, password, time });
+      guestForm.name.value = "";
+      guestForm.message.value = "";
+      guestForm.password.value = "";
   });
+
 </script>
 
 </body>
 </html>
+
