@@ -179,12 +179,13 @@
       const password = guestForm.password.value;
       const time = new Date().toLocaleString();
       if(!name || !message || !password) { alert("모든 입력란을 작성해주세요."); return; }
+      // Firebase에만 초대코드 저장
       push(guestbookRef, { 
           name, 
           message, 
           password, 
           time,
-          inviteCode: currentCode // Firebase에만 저장, 화면에는 표시 안 함
+          inviteCode: currentCode // 화면에는 표시되지 않음
       });
       guestForm.name.value = "";
       guestForm.message.value = "";
