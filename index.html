@@ -41,7 +41,6 @@
   ul { list-style-type: none; padding: 0; }
   li { font-size: 12px; border-bottom: 1px solid #ddd; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
   .entry-left { flex-grow: 1; }
-  .entry-name { font-weight: bold; font-size: 14px; margin-right: 6px; } /* 작성자 이름 볼드 + 2pt 증가 */
   .entry-time { color: #888; font-size: 11px; white-space: nowrap; margin-left: 10px; }
   .entry-code { color: #555; font-size: 11px; margin-left: 10px; }
   .delete-btn { margin-left: 10px; font-size: 11px; cursor: pointer; }
@@ -113,15 +112,16 @@
                        "UIO583","QAZ471","WSX690","EDC354","RFV217","TGB865","YHN039","UJM642",
                        "IKL751","OPQ208","ASD376","FGH904","JKL532","QWE138","RTY469","ZXC805"];
 
-  let currentCode = "";
+  let currentCode = ""; // 사용한 초대코드 저장
 
   closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
 
+  // 초대 코드 확인
   inviteForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const code = document.getElementById("inviteCode").value.trim();
       if(inviteCodes.includes(code)) {
-          currentCode = code;
+          currentCode = code;           // 현재 코드 저장
           localStorage.setItem("verified","true");
           inviteSection.style.display = "none";
           mainSection.style.display = "block";
@@ -130,6 +130,7 @@
       }
   });
 
+  // 이미 인증한 사용자면 바로 보여주기
   if(localStorage.getItem("verified") === "true"){
       inviteSection.style.display = "none";
       mainSection.style.display = "block";
@@ -165,11 +166,13 @@
     }
   }
 
+  // 실시간 DB 반영
   const guestbookRef = ref(db, 'guestbook');
   onValue(guestbookRef, (snapshot) => {
     renderEntries(snapshot.val());
   });
 
+  // 글 작성
   guestForm.addEventListener("submit", (e) => {
       e.preventDefault();
       const name = guestForm.name.value.trim();
@@ -182,12 +185,13 @@
           message, 
           password, 
           time,
-          inviteCode: currentCode
+          inviteCode: currentCode // 사용한 초대코드 저장
       });
       guestForm.name.value = "";
       guestForm.message.value = "";
       guestForm.password.value = "";
   });
+
 </script>
 
 </body>
