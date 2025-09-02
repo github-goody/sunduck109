@@ -34,14 +34,14 @@
     color: #555; text-align: center; margin-bottom: 30px; user-select: none;
   }
   form { display: flex; gap: 10px; margin-bottom: 20px; font-size: 12px; }
-  input[type="text"], input[type="password"] { padding: 5px; border: 1px solid #ddd; font-size: 12px; font-family: inherit; }
-  input[name="name"], input[name="password"], input[name="inviteCode"] { width: 80px; }
+  input[type="text"], input[type="password"], input[name="inviteCode"] { padding: 5px; border: 1px solid #ddd; font-size: 12px; font-family: inherit; width: 80px; }
   input[name="message"] { flex: 1; }
   button[type="submit"] { padding: 5px 15px; font-size: 12px; background-color: #efefef; border: 1px solid #ccc; }
   button[type="submit"]:hover { background-color: #e0e0e0; }
   ul { list-style-type: none; padding: 0; }
   li { font-size: 12px; border-bottom: 1px solid #ddd; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
   .entry-left { flex-grow: 1; }
+  .entry-name { font-weight: bold; font-size: 14px; } /* 이름 볼드 + 글자 2pt 증가 */
   .entry-time { color: #888; font-size: 11px; white-space: nowrap; margin-left: 10px; }
   .delete-btn { margin-left: 10px; font-size: 11px; cursor: pointer; }
 </style>
@@ -107,40 +107,12 @@
   const inviteSection = document.getElementById("inviteSection");
   const mainSection = document.getElementById("mainSection");
 
-  const inviteCodes = [
-  "XQJ582",
-  "ABM193",
-  "LPO746",
-  "RZT021",
-  "GKH657",
-  "VFD384",
-  "QWE905",
-  "NMK472",
-  "TYU836",
-  "JHG591",
-  "BVC273",
-  "PLM640",
-  "SDF729",
-  "KJH184",
-  "ZXN307",
-  "ERT926",
-  "UIO583",
-  "QAZ471",
-  "WSX690",
-  "EDC354",
-  "RFV217",
-  "TGB865",
-  "YHN039",
-  "UJM642",
-  "IKL751",
-  "OPQ208",
-  "ASD376",
-  "FGH904",
-  "JKL532",
-  "QWE138",
-  "RTY469",
-  "ZXC805"
-]; // 원하는 코드 설정
+  const inviteCodes = ["XQJ582","ABM193","LPO746","RZT021","GKH657","VFD384","QWE905","NMK472",
+                       "TYU836","JHG591","BVC273","PLM640","SDF729","KJH184","ZXN307","ERT926",
+                       "UIO583","QAZ471","WSX690","EDC354","RFV217","TGB865","YHN039","UJM642",
+                       "IKL751","OPQ208","ASD376","FGH904","JKL532","QWE138","RTY469","ZXC805"];
+
+  let currentCode = ""; // 사용한 초대코드 저장
 
   closeBtn.addEventListener('click', () => { modal.style.display = 'none'; });
 
@@ -149,6 +121,7 @@
       e.preventDefault();
       const code = document.getElementById("inviteCode").value.trim();
       if(inviteCodes.includes(code)) {
+          currentCode = code;           // 현재 코드 저장
           localStorage.setItem("verified","true");
           inviteSection.style.display = "none";
           mainSection.style.display = "block";
@@ -206,7 +179,13 @@
       const password = guestForm.password.value;
       const time = new Date().toLocaleString();
       if(!name || !message || !password) { alert("모든 입력란을 작성해주세요."); return; }
-      push(guestbookRef, { name, message, password, time });
+      push(guestbookRef, { 
+          name, 
+          message, 
+          password, 
+          time,
+          inviteCode: currentCode // Firebase에만 저장, 화면에는 표시 안 함
+      });
       guestForm.name.value = "";
       guestForm.message.value = "";
       guestForm.password.value = "";
