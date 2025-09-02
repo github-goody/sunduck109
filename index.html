@@ -41,8 +41,8 @@
   ul { list-style-type: none; padding: 0; }
   li { font-size: 12px; border-bottom: 1px solid #ddd; padding: 8px 0; display: flex; justify-content: space-between; align-items: center; }
   .entry-left { flex-grow: 1; }
+  .entry-name { font-weight: bold; font-size: 14px; } /* 이름 볼드 + 글자 2pt 증가 */
   .entry-time { color: #888; font-size: 11px; white-space: nowrap; margin-left: 10px; }
-  .entry-code { color: #555; font-size: 11px; margin-left: 10px; }
   .delete-btn { margin-left: 10px; font-size: 11px; cursor: pointer; }
 </style>
 </head>
@@ -143,7 +143,6 @@
         <span class="entry-name">${entry.name}</span>
         ${entry.message}
         <div class="entry-time">${entry.time}</div>
-        <div class="entry-code">[코드: ${entry.inviteCode}]</div>
       </div>
       <button class="delete-btn">삭제</button>
     `;
@@ -185,7 +184,7 @@
           message, 
           password, 
           time,
-          inviteCode: currentCode // 사용한 초대코드 저장
+          inviteCode: currentCode // Firebase에만 저장, 화면에는 표시 안 함
       });
       guestForm.name.value = "";
       guestForm.message.value = "";
